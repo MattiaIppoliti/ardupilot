@@ -115,6 +115,9 @@ void RC_Channel_Copter::init_aux_function(const aux_func_t ch_option, const AuxS
     case AUX_FUNC::WINCH_ENABLE:
         do_aux_function(ch_option, ch_flag);
         break;
+    case AUX_FUNC::MOTOR_FAIL:
+        do_aux_function(ch_option, ch_flag);
+        break;
     case AUX_FUNC::AIRMODE:
         do_aux_function_change_air_mode(ch_flag);
         break;
@@ -580,6 +583,18 @@ void RC_Channel_Copter::do_aux_function(const aux_func_t ch_option, const AuxSwi
 #endif
             break;
             
+       case AUX_FUNC::MOTOR_FAIL:
+                  switch (ch_flag) {
+                  case AuxSwitchPos::LOW:
+                  case AuxSwitchPos::MIDDLE:
+                      copter.motors->set_motor_fail_trigger(false);
+                      break;
+                  case AuxSwitchPos::HIGH:
+                      copter.motors->set_motor_fail_trigger(true);
+                      break;
+                  }
+        break;
+
     default:
         RC_Channel::do_aux_function(ch_option, ch_flag);
         break;
