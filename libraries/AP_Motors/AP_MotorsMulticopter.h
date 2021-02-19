@@ -57,7 +57,7 @@ public:
     void                set_throttle_passthrough_for_esc_calibration(float throttle_input);
 
     // get_lift_max - get maximum lift ratio - for logging purposes only
-    float               get_lift_max() const { return _lift_max; }
+    float               get_lift_max() { return _lift_max; }
 
     // get_batt_voltage_filt - get battery voltage ratio - for logging purposes only
     float               get_batt_voltage_filt() const { return _batt_voltage_filt.get(); }
@@ -99,6 +99,9 @@ public:
     // disable the use of motor torque to control yaw. Used when an external mechanism such
     // as vectoring is used for yaw control
     virtual void        disable_yaw_torque(void) {}
+
+    // set_motor_fail_trigger - controls if motor fail should be activate
+    void set_motor_fail_trigger(bool fail);
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo        var_info[];
@@ -182,6 +185,10 @@ protected:
 
     // scaling for booster motor throttle
     AP_Float            _boost_scale;
+
+    AP_Int8             _motor_fail_number;     // Controls which motor will slow when simulating a motor-failure
+    AP_Int8             _motor_fail_percent;    // Controls how much slow (as a percentage of it's regular speed) the failed motor will run (0 = stopped, 100 = normal)
+    bool                _motor_fail;
 
     // motor output variables
     bool                motor_enabled[AP_MOTORS_MAX_NUM_MOTORS];    // true if motor is enabled
