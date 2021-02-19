@@ -455,7 +455,7 @@ bool AP_InertialSensor_Invensense::_accumulate(uint8_t *samples, uint8_t n_sampl
         gyro = Vector3f(int16_val(data, 5),
                         int16_val(data, 4),
                         -int16_val(data, 6));
-        gyro *= _gyro_scale;
+        gyro *=_gyro_scale;
 
         _rotate_and_correct_accel(_accel_instance, accel);
         _rotate_and_correct_gyro(_gyro_instance, gyro);
@@ -503,6 +503,11 @@ bool AP_InertialSensor_Invensense::_accumulate_sensor_rate_sampling(uint8_t *sam
             Vector3f a(int16_val(data, 1),
                        int16_val(data, 0),
                        -int16_val(data, 2));
+            //Vector3f biass(100.0f, 100.0f, 100.0f);
+            //Vector3f biass(rand()*0.00000001f, rand()*0.00000001f, rand()*0.00000001f);
+
+            //a+=biass; // guasto additivo accel
+            //a*=1.5f; // guasto moltiplicativo accel
             if (fabsf(a.x) > unscaled_clip_limit ||
                 fabsf(a.y) > unscaled_clip_limit ||
                 fabsf(a.z) > unscaled_clip_limit) {
@@ -532,14 +537,25 @@ bool AP_InertialSensor_Invensense::_accumulate_sensor_rate_sampling(uint8_t *sam
                    int16_val(data, 4),
                    -int16_val(data, 6));
 
+        Vector3f biass(rand()*0.000001f, rand()*0.000001f, rand()*0.000001f);
+
+        //if(_mpu_type==Invensense_MPU9250){
+
+        //}
+
+        //g*=1,5f;  //guasto moltiplicativo gyro
+        g+= biass;  // guasto additivo gyro
+
         Vector3f g2 = g * _gyro_scale;
         _notify_new_gyro_sensor_rate_sample(_gyro_instance, g2);
 
         _accum.gyro += g;
 
         if (_accum.gyro_count % _gyro_fifo_downsample_rate == 0) {
-            _accum.gyro *= _fifo_gyro_scale;
+            _accum.gyro = _accum.gyro*_fifo_gyro_scale;
             _rotate_and_correct_gyro(_gyro_instance, _accum.gyro);
+
+//           //_accum.gyro = _accum.gyro;
             _notify_new_gyro_raw_sample(_gyro_instance, _accum.gyro);
             _accum.gyro.zero();
         }
@@ -581,7 +597,7 @@ void AP_InertialSensor_Invensense::_read_fifo()
       FIFO then some of those samples will be corrupt. It always is
       the ones at the end of the FIFO, so clear those with a reset
       once we've read the first 24. Reading 24 gives us the normal
-      number of samples for fast sampling at 400Hz
+      number of samples for fast sampling at 400Hz.
 
       On I2C with the much lower clock rates we need a lower threshold
       or we may never catch up
